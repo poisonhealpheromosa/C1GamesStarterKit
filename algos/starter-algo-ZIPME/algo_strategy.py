@@ -242,8 +242,7 @@ class AlgoStrategy(gamelib.AlgoCore):
     def game_strategy(self, game_state):
         
     def deploy(self, unit_type, coordinates, game_state):
-        for coord in coordinates:
-            game_state.attempt_spawn(unit_type, coord)
+        game_state.attempt_spawn(unit_type, coordinates)
     
 
 if __name__ == "__main__":

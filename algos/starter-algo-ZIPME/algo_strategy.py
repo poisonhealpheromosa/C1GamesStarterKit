@@ -39,6 +39,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         PING = config["unitInformation"][3]["shorthand"]
         EMP = config["unitInformation"][4]["shorthand"]
         SCRAMBLER = config["unitInformation"][5]["shorthand"]
+        global units = [FILTER, ENCRYPTOR, DESTRUCTOR, PING, EMP, SCRAMBLER]
 
 
     def on_turn(self, turn_state):
@@ -53,13 +54,18 @@ class AlgoStrategy(gamelib.AlgoCore):
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         #game_state.suppress_warnings(True)  #Uncomment this line to suppress warnings.
 
-        self.starter_strategy(game_state)
-
+        #self.starter_strategy(game_state)
+        if game_state.turn_number == 0:
+            strat = self.lead_strategy(game_state)
+        else:
+            strat = self.game_strategy(game_state)
+        for i in range(0, 6):
+            deploy(units[x], strat[x], game_state)
         game_state.submit_turn()
 
     """
     NOTE: All the methods after this point are part of the sample starter-algo
-    strategy and can safey be replaced for your custom algo.
+    strategy and can safely be replaced for your custom algo.
     """
     def starter_strategy(self, game_state):
         """
@@ -225,6 +231,20 @@ class AlgoStrategy(gamelib.AlgoCore):
             if not game_state.contains_stationary_unit(location):
                 filtered.append(location)
         return filtered
+    
+    def lead_strategy(self, game_state):
+        # first turn strategy, this must be static
+        filter_spots = [[1, 13], [2, 13], [3, 12], [4, 11], [5, 11], [6, 11], [18, 12], [21, 11], [22, 11], [23, 11], [24, 12], [25, 13], [26, 13]]
+        destructor_spots = [[0, 13], [7, 11], [20, 11], [27, 13]]
+        ping_spots = [[24, 17], [24, 17], [24, 17], [24, 17], [24, 17]]
+        return [firewall_spots, [], destructor_spots, ping_spots, [], []]
+    
+    def game_strategy(self, game_state):
+        
+    def deploy(self, unit_type, coordinates, game_state):
+        for coord in coordinates:
+            game_state.attempt_spawn(unit_type, coord)
+    
 
 if __name__ == "__main__":
     algo = AlgoStrategy()

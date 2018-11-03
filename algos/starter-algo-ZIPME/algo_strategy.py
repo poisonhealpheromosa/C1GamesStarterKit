@@ -25,6 +25,7 @@ class AlgoStrategy(gamelib.AlgoCore):
     def __init__(self):
         super().__init__()
         random.seed()
+        self.frontline_exits = [[2, 13], [9, 13], [18, 13], [25, 13]]
 
     def on_game_start(self, config):
         """ 
@@ -32,14 +33,14 @@ class AlgoStrategy(gamelib.AlgoCore):
         """
         gamelib.debug_write('Configuring your custom algo strategy...')
         self.config = config
-        global FILTER, ENCRYPTOR, DESTRUCTOR, PING, EMP, SCRAMBLER
+        global FILTER, ENCRYPTOR, DESTRUCTOR, PING, EMP, SCRAMBLER, UNITS
         FILTER = config["unitInformation"][0]["shorthand"]
         ENCRYPTOR = config["unitInformation"][1]["shorthand"]
         DESTRUCTOR = config["unitInformation"][2]["shorthand"]
         PING = config["unitInformation"][3]["shorthand"]
         EMP = config["unitInformation"][4]["shorthand"]
         SCRAMBLER = config["unitInformation"][5]["shorthand"]
-        global units = [FILTER, ENCRYPTOR, DESTRUCTOR, PING, EMP, SCRAMBLER]
+        UNITS = [FILTER, ENCRYPTOR, DESTRUCTOR, PING, EMP, SCRAMBLER]
 
 
     def on_turn(self, turn_state):
@@ -234,12 +235,16 @@ class AlgoStrategy(gamelib.AlgoCore):
     
     def lead_strategy(self, game_state):
         # first turn strategy, this must be static
-        filter_spots = [[1, 13], [2, 13], [3, 12], [4, 11], [5, 11], [6, 11], [18, 12], [21, 11], [22, 11], [23, 11], [24, 12], [25, 13], [26, 13]]
-        destructor_spots = [[0, 13], [7, 11], [20, 11], [27, 13]]
+        filter_spots = [[1, 13], [2, 13], [3, 12], [4, 11], [5, 10], [6, 10], [18, 11], [21, 10], [22, 10], [23, 11], [24, 12], [25, 13], [26, 13]]
+        destructor_spots = [[0, 13], [7, 10], [20, 10], [27, 13]]
         ping_spots = [[24, 17], [24, 17], [24, 17], [24, 17], [24, 17]]
         return [firewall_spots, [], destructor_spots, ping_spots, [], []]
     
     def game_strategy(self, game_state):
+        placements = [[], [], [], [], [], []]
+        for breachpoint in self.breach_list:
+            if breachpoint[1] > 9:
+                if game_state.can_spawn(
         
     def deploy(self, unit_type, coordinates, game_state):
         game_state.attempt_spawn(unit_type, coordinates)

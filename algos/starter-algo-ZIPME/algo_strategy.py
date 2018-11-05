@@ -70,6 +70,9 @@ class AlgoStrategy(gamelib.AlgoCore):
         
         self.times_corner_attacked = 0
         
+        self.enemy_frontlines = []
+        for h in range(14, 19):
+            enemy_frontlines.append(h)
         self.attacking_with_pings = True
         self.attacking_this_turn = True
         
@@ -168,6 +171,12 @@ class AlgoStrategy(gamelib.AlgoCore):
         dont_build_here = furthest_row + 1
         # determines where the opponent's furthest row forward is, so the best place to build to stay out of emp range
         # while not building a harmful double wall
+        frontline_wall_list = [0, 0, 0, 0, 0]
+        for frontline in enemy_frontlines:
+            for b in range(4, 24):
+                if game_state.contains_stationary_unit(b, frontline):
+                    frontline_wall_list[frontline-14] += 1
+        # finds where the enemy is building their front lines
         
         return expert_analysis
 

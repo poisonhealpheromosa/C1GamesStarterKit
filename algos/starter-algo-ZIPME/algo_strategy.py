@@ -25,7 +25,7 @@ class AlgoStrategy(gamelib.AlgoCore):
     def __init__(self):
         super().__init__()
         random.seed()
-        self.first_turn_filters = [[0,13],[1,12],[2,11],[3,10],[6,9],[7,9],[17,9],[20,9],[21,9],[24,10],[25,11],[26,12],[27,13]]
+        self.first_turn_filters = [[0,13],[1,12],[2,11],[3,10],[5,9],[7,9],[17,9],[20,9],[21,9],[24,10],[25,11],[26,12],[27,13]]
         self.first_turn_destructors = [[4,9],[8,9],[19,9],[23,9]]
         self.first_turn_pings = [[9,4],[9,4],[9,4],[9,4],[9,4]]
         self.frontline_exits = [[2, 13], [9, 13], [18, 13], [25, 13]]
@@ -42,6 +42,27 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.third_row_wall = []
         for l in range(6, 22):
             self.third_row_wall.append([l, 11])
+        self.third_row_left_exit = [5,10]
+        self.third_row_right_exit = [22,10]
+        self.fifth_row_left_exit = [9,9]
+        self.fifth_row_right_exit = [18,9]
+        self.first_row_left_exit_single_layer = [3,12]
+        self.first_row_right_exit_single_layer = [24,12]
+        self.first_row_left_exit_double_layer = [4,12]
+        self.first_row_right_exit_double_layer = [23,12]
+        # exits blocked number is *2 for left, *3 for right
+        self.fifth_row_exits_blocked = 1
+        self.third_row_exits_blocked = 1
+        self.first_row_exits_blocked = 1
+        self.left_layers = 1
+        self.right_layers = 1
+        
+        self.fifth_row_destructors = [[4,9],[8,9],[10,9],[17,9],[19,9],[23,9]]
+        
+        self.back_redirector_built = 0
+        self.back_redirector_column = 13
+        
+        
 
     def on_game_start(self, config):
         """ 

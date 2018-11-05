@@ -37,8 +37,11 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.fifth_row_wall = []
         for k in range(4, 24):
             self.fifth_row_wall.append([k, 9])
-        self.left_corner = [[0,13],[1,13],[1,12],[2,12],[2,11],[3,11],[3,10],[4,10]]
-        self.right_corner = [[27,13],[26,13],[26,12],[25,12],[25,11],[24,11],[24,10],[23,10]]
+        self.left_corner_initial_layer = [[0,13],[1,12],[2,12],[3,11]]
+        self.left_corner_second_layer = [[1,13],[2,12],[3,11],[4,10]]
+        self.right_corner_initial_layer = [[27,13],[26,12],[25,11],[24,10]]
+        self.right_corner_second_layer = [[26,13],[25,12],[24,11],[23,10]]
+        self.corners_initial = self.left_corner_initial_layer + self.right_corner_initial_layer
         self.third_row_wall = []
         for l in range(6, 22):
             self.third_row_wall.append([l, 11])
@@ -58,17 +61,25 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.right_layers = 1
         
         self.fifth_row_destructors = [[4,9],[8,9],[10,9],[17,9],[19,9],[23,9]]
+        self.row_being_built = 5
         
         self.back_redirector_built = 0
         self.back_redirector_column = 13
         
+        self.building_encryptors = False
         
+        self.times_corner_attacked = 0
+        
+        self.attacking_with_pings = True
+        self.attacking_this_turn = True
+        
+
 
     def on_game_start(self, config):
         """ 
         Read in config and perform any initial setup here 
         """
-        gamelib.debug_write('Configuring your custom algo strategy...')
+        gamelib.debug_write('literally who says "algo" as short for "algorithm" i love this game but man that sounds so stupid')
         self.config = config
         global FILTER, ENCRYPTOR, DESTRUCTOR, PING, EMP, SCRAMBLER, UNITS
         FILTER = config["unitInformation"][0]["shorthand"]
@@ -89,7 +100,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         game engine.
         """
         game_state = gamelib.GameState(self.config, turn_state)
-        gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
+        gamelib.debug_write('truth_of_cthaeh is currently sitting at number {} on the leaderboard'.format((game_state.turn_number) ** 2)
         #game_state.suppress_warnings(True)  #Uncomment this line to suppress warnings.
 
         #self.starter_strategy(game_state)
@@ -98,7 +109,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         else:
             strat = self.game_strategy(game_state)
         for i in range(0, 6):
-            deploy(units[x], strat[x], game_state)
+            deploy(UNITS[i], strat[i], game_state)
         game_state.submit_turn()
         
     def filter_blocked_locations(self, locations, game_state):
@@ -110,23 +121,55 @@ class AlgoStrategy(gamelib.AlgoCore):
     
     def game_strategy(self, game_state):
         placements = [[], [], [], [], [], []]
-        for breachpoint in self.breach_list:
-            # if the breach is near the corners, try to defend them
-            if breachpoint[1] > 9:
-                buildpoint = breachpoint
-                while not game_state.can_spawn(FILTER, buildpoint) or buildpoint in no_wall_zone:
-                    buildpoint[0] = buildpoint[0] + random.randint(1,3) - 2
-                    buildpoint[1] = buildpoint[1] + random.randint(1,3) - 2
-                    if not game_state.game_map.in_arena_bounds(self, buildpoint):
-                        buildpoint = breachpoint
-                game_state.attempt_spawn(FILTER, buildpoint)
-                game_state.debug_write('shoring up the location {}'.format(breachpoint))
-        for filter in 
-                
+        my_bits = game_state.get_resource(game_state.BITS, 0)
+        my_cores = game_state.get_resource(game_state.CORES, 0)
+        enemy_bits = game_state.get_resource(game_state.BITS, 1)
+        enemy_cores = game_state.get_resource(game_state.CORES, 1)
+        for corner_location in self.corners_initial:
+            if not game_state.contains_stationary_unit(corner_location):
+                placements[0].append(corner_location)
+                self.times_corner_attacked += 1
+                my_cores -= 1
+        row_5_destructors = 0
+        for destructor_location in self.fifth_row_destructors:
+            if not game_state.contains_stationary_unit(destructor_location):
+                if my_cores >= 3:
+                    placements[2].append(destructor_location)
+                    my_cores -= 3
+                    row_5_destructors += 1
+            else:
+                row_5_destructors += 1
+        if row_5_destructors >= 6 and row_being_built == 5:
+            row_5_wall = 0
+            empty_spots = []
+            for t in range(4, 24):
+                if game_state.contains_stationary_unit([t, 9]):
+                    row_5_wall += 1
+                else:
+                    empty_spots.append([t, 9])
+            if row_5_wall < 18:
+                while my_cores > 0 and row_5_wall < 18:
+                    place_to_build = random.randint(1, len(empty_spots))-1
+                    placements[0].append(empty_spots.pop(place_to_build))
+                    row_5_wall += 1
+                    my_cores -= 1
+                if row_5_wall == 18:
+                    self.fifth_row_left_exit = [min(empty_spots[0][0],empty_spots[1][0]), 9]
+                    self.fifth_row_right_exit = [max(empty_spots[0][0],empty_spots[1][0]), 9]
+                    self.row_being_built = analyze_enemy_lines(game_state, 5)
+        
+        
         
     def deploy(self, unit_type, coordinates, game_state):
         game_state.attempt_spawn(unit_type, coordinates)
     
+    def analyze_enemy_lines(self, game_state, furthest_row):
+        expert_analysis = furthest_row
+        dont_build_here = furthest_row + 1
+        # determines where the opponent's furthest row forward is, so the best place to build to stay out of emp range
+        # while not building a harmful double wall
+        
+        return expert_analysis
 
 if __name__ == "__main__":
     algo = AlgoStrategy()

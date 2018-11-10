@@ -63,6 +63,11 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.fifth_row_destructors = [[4,9],[8,9],[10,9],[17,9],[19,9],[23,9]]
         self.row_being_built = 5
         
+        self.middle_row_center_destructors = [10,14],[15,14]
+        self.middle_row_side_destructors = [6,14],[21,14]
+        self.middle_row_left_firewalls = [[7,14],[8,14],[9,14]]
+        self.middle_row_right_firewalls = [[16,14],[17,14],[18,14],[19,14],[20,14]]
+        
         self.back_redirector_built = 0
         self.back_redirector_column = 13
         
@@ -75,8 +80,7 @@ class AlgoStrategy(gamelib.AlgoCore):
             enemy_frontlines.append(h)
         self.attacking_with_pings = True
         self.attacking_this_turn = True
-        
-
+        self.ping_spot = [9,4]
 
     def on_game_start(self, config):
         """ 
@@ -114,7 +118,8 @@ class AlgoStrategy(gamelib.AlgoCore):
         for i in range(0, 6):
             deploy(UNITS[i], strat[i], game_state)
         game_state.submit_turn()
-        
+
+                            
     def filter_blocked_locations(self, locations, game_state):
         filtered = []
         for location in locations:
@@ -122,6 +127,7 @@ class AlgoStrategy(gamelib.AlgoCore):
                 filtered.append(location)
         return filtered
     
+                            
     def game_strategy(self, game_state):
         placements = [[], [], [], [], [], []]
         my_bits = game_state.get_resource(game_state.BITS, 0)
@@ -160,12 +166,33 @@ class AlgoStrategy(gamelib.AlgoCore):
                     self.fifth_row_left_exit = [min(empty_spots[0][0],empty_spots[1][0]), 9]
                     self.fifth_row_right_exit = [max(empty_spots[0][0],empty_spots[1][0]), 9]
                     self.row_being_built = analyze_enemy_lines(game_state, 5)
-        
-        
+        if my_cores > 5 and row_being_built != 5:
+            for t in middle_row_center_destructors:
+                if not game_state.contains_stationary_unit([t[0],t[1]-row_being_built]):
+                    placements[2].append([t[0],t[1]-row_being_built])
+                    my_cores -= 3
+            for t in middle_row_left_filters:
+                if not game_state.contains_stationary_unit([t[0],t[1]-row_being_built]):
+                    placements[0].append([t[0],t[1]-row_being_built])
+                    my_cores -= 1
+        if my_cores > 5 and row_being_built != 5:
+            for t in middle_row_side_destructors:
+                if not game_state.contains_stationary_unit([t[0],t[1]-row_being_built]):
+                    placements[2].append([t[0],t[1]-row_being_built])
+        if building_encryptors:
+            pass
+        attacking_this_turn = analyze_should_attack(game_state)
+        attacking_with_pings = analyze_attack_type(game_state)
+        if attacking_this_turn:
+            if attacking_with_pings:
+                for y in range(my_bits):
+                    placements[3].append(ping_spot)
+        return placements
         
     def deploy(self, unit_type, coordinates, game_state):
         game_state.attempt_spawn(unit_type, coordinates)
     
+                            
     def analyze_enemy_lines(self, game_state, furthest_row):
         expert_analysis = furthest_row
         dont_build_here = furthest_row + 1
@@ -177,9 +204,25 @@ class AlgoStrategy(gamelib.AlgoCore):
                 if game_state.contains_stationary_unit(b, frontline):
                     frontline_wall_list[frontline-14] += 1
         # finds where the enemy is building their front lines
-        
+        furthest_wall = 14
+        for frontline_wall in frontline_wall_list:
+            if frontline_wall > 7:
+                frontline_wall = furthest_wall
+                """if frontline_wall > 9:
+                    building_encryptors = True"""
+                break
+            furthest_wall += 1
+        if furthest_wall > dont_build_here:
+            expert_analysis = furthest_wall
         return expert_analysis
-
+                            
+    def analyze_should_attack(self, game_state):
+        return True
+                            
+    def analyze_attack_type(self, game_state):
+        return True
+                      
+                            
 if __name__ == "__main__":
     algo = AlgoStrategy()
     algo.start()
